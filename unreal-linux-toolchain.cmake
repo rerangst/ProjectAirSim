@@ -52,7 +52,8 @@ set(CMAKE_SYSROOT
 
 set(CMAKE_C_COMPILER   "${CMAKE_SYSROOT}/bin/clang")
 set(CMAKE_CXX_COMPILER "${CMAKE_SYSROOT}/bin/clang++")
-set(CMAKE_CXX_FLAGS "-I$ENV{UE_ROOT}/Engine/Source/ThirdParty/Unix/LibCxx/include -I$ENV{UE_ROOT}/Engine/Source/ThirdParty/Unix/LibCxx/include/c++/v1")
+# UE 5.8: LibCxx headers ship inside the SDK sysroot (include/c++/v1); the
+# sysroot clang finds them itself via -stdlib=libc++, no extra -I needed.
 
 set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)
 set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)

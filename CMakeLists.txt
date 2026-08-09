@@ -41,7 +41,13 @@ if (UNIX)
         message("Building/linking against Unreal packaged toolchain from UE_ROOT=$ENV{UE_ROOT}")
         set(PROJECTAIRSIM_USE_UE_TOOLCHAIN ON)
         set(CMAKE_TOOLCHAIN_FILE "unreal-linux-toolchain.cmake")
-        link_directories("$ENV{UE_ROOT}/Engine/Source/ThirdParty/Unix/LibCxx/lib/Unix/x86_64-unknown-linux-gnu")
+        # UE 5.8 dropped Engine/Source/ThirdParty/Unix/LibCxx; libc++.a/libc++abi.a
+        # now live in the SDK sysroot lib64 (same place UBT links from).
+        file(GLOB _UE_SDK_DIRS LIST_DIRECTORIES true
+            "$ENV{UE_ROOT}/Engine/Extras/ThirdPartyNotUE/SDKs/HostLinux/Linux_x64/*")
+        list(SORT _UE_SDK_DIRS)
+        list(GET _UE_SDK_DIRS -1 _UE_SDK_SELECTED)
+        link_directories("${_UE_SDK_SELECTED}/x86_64-unknown-linux-gnu/lib64")
     else()
         message("Building/linking against system-installed toolchain")
         set(PROJECTAIRSIM_USE_UE_TOOLCHAIN OFF)
