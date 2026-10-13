@@ -1518,11 +1518,8 @@ void MavLinkApi::ConnectVehicle() {
   // now we can start our heartbeats.
   GetLogger().LogTrace(GetControllerName(), "Starting heartbeat");
   mavlinkcom::MavLinkHeartbeat heartbeat;
-  // A GCS is not an autopilot: MAVLink reserves MAV_AUTOPILOT_INVALID for that.
-  // With GENERIC, PX4 forwards this heartbeat to its GCS link and MAVSDK may
-  // bind to the simulator instead of the vehicle.
   heartbeat.autopilot =
-      static_cast<uint8_t>(mavlinkcom::MAV_AUTOPILOT::MAV_AUTOPILOT_INVALID);
+      static_cast<uint8_t>(mavlinkcom::MAV_AUTOPILOT::MAV_AUTOPILOT_GENERIC);
   heartbeat.type = static_cast<uint8_t>(mavlinkcom::MAV_TYPE::MAV_TYPE_GCS);
   heartbeat.mavlink_version = 3;
   heartbeat.base_mode = 0;      // ignored by PX4
@@ -1608,9 +1605,8 @@ void MavLinkApi::CreateMavSerialConnection(const std::string& port_name,
       GetLogger().LogTrace(GetControllerName(),
                            "Start sending heartbeat to PX4 every 1 sec");
       mavlinkcom::MavLinkHeartbeat heartbeat;
-      // GCS, not an autopilot; see the heartbeat set up in ConnectVehicle().
       heartbeat.autopilot = static_cast<uint8_t>(
-          mavlinkcom::MAV_AUTOPILOT::MAV_AUTOPILOT_INVALID);
+          mavlinkcom::MAV_AUTOPILOT::MAV_AUTOPILOT_GENERIC);
       heartbeat.type = static_cast<uint8_t>(mavlinkcom::MAV_TYPE::MAV_TYPE_GCS);
       heartbeat.mavlink_version = 3;
       heartbeat.base_mode = 0;      // ignored by PX4
