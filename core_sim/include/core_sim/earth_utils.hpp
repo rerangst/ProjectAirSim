@@ -260,13 +260,13 @@ class EarthUtils {
 
     Accuracy:
         Two points separated by sqrt(2 km)
-        Dipole Model:   2.50394e-05     3.40771e-06     3.6567e-05 (dec: 7.7500,
-    inc: 55.3530) WMM2015
+        Dipole Model:   1.81994e-05     3.99371e-06     5.00281e-05 (dec: 12.3769,
+    inc: 69.5726) WMM2015
     Model:  1.8350e-05		5.201e-06		5.0158e-05
     (dec: 15.8248, inc: 69.1805) geo:            47.637  -122.147    622
 
-        Dipole Model:   2.5047e-05      3.41024e-06     3.65953e-05
-    (dec: 7.7536, inc: 55.36532) WMM2015
+        Dipole Model:   1.82034e-05      3.99482e-06     5.00585e-05
+    (dec: 12.3776, inc: 69.5799) WMM2015
     Model:  1.8353e-05		5.203e-06		5.0191e-05
     (dec: 15.8278, inc: 69.1897) geo:            47.646  -122.134    -378
     */
@@ -275,8 +275,7 @@ class EarthUtils {
     // Lanza, Antonio Meloni Sec 1.2.5, pg 27-30 https://goo.gl/bRm7wt some
     // theory at http://www.tulane.edu/~sanelson/eens634/Hmwk6MagneticField.pdf
 
-    double lat =
-        TransformUtils::ToRadians(geo_point.latitude);  // geographic colatitude
+    double lat = TransformUtils::ToRadians(geo_point.latitude);
     double lon = TransformUtils::ToRadians(geo_point.longitude);
     double altitude = geo_point.altitude + kEarthRadius;
 
@@ -285,10 +284,13 @@ class EarthUtils {
     double cos_MagPoleLat = cos(MagPoleLat);
     double cos_lat = cos(lat);
     double sin_lat = sin(lat);
+    double pole_dlon = MagPoleLon - lon;
 
-    // find magnetic colatitude
-    double mag_clat = acos(cos_lat * cos_MagPoleLat +
-                           sin_lat * sin_MagPoleLat * cos(lon - MagPoleLon));
+    // find magnetic colatitude: the angle between this point and the dipole's
+    // pole, by the spherical law of cosines on geographic latitudes
+    double cos_mag_clat =
+        sin_lat * sin_MagPoleLat + cos_lat * cos_MagPoleLat * cos(pole_dlon);
+    double mag_clat = acos(cos_mag_clat);
 
     // calculation of magnetic longitude is not needed but just in case if
     // someone wants it double mag_lon = asin(
@@ -297,20 +299,16 @@ class EarthUtils {
 
     // field strength only depends on magnetic colatitude
     // https://en.wikipedia.org/wiki/Dipole_model_of_the_Earth's_magnetic_field
-    double cos_mag_clat = cos(mag_clat);
     double field_mag = MeanMagField * pow(kEarthRadius / altitude, 3) *
                        sqrt(1 + 3 * cos_mag_clat * cos_mag_clat);
 
     // find inclination and declination
-    // equation of declination in above referenced book is only partial
-    // full equation is (4a) at
-    // http://www.tulane.edu/~sanelson/eens634/Hmwk6MagneticField.pdf
-    double lat_test = sin_MagPoleLat * sin_lat;
-    double dec_factor = cos_MagPoleLat / sin(mag_clat);
-    if (cos_mag_clat > lat_test)
-      declination = asin(sin(lon - MagPoleLon) * dec_factor);
-    else
-      declination = asin(cos(lon - MagPoleLon) * dec_factor);
+    // a dipole's horizontal field points along the great circle to its pole,
+    // so declination is the bearing from this point to the pole; atan2 keeps
+    // the quadrant for points poleward of the magnetic pole
+    declination = atan2(sin(pole_dlon) * cos_MagPoleLat,
+                        cos_lat * sin_MagPoleLat -
+                            sin_lat * cos_MagPoleLat * cos(pole_dlon));
     inclination = atan(2.0 / tan(mag_clat));  // do not use atan2 here
 
     // transform magnetic field vector to geographical coordinates
